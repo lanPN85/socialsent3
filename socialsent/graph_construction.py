@@ -2,13 +2,13 @@ import numpy as np
 from scipy import sparse
 from itertools import chain
 from nltk.corpus import wordnet as wn
-import multiprocessing
 
 MAX_PROCS=8
 
 """
 Methods for constructing graphs from word embeddings.
 """
+
 
 def similarity_matrix(embeddings, arccos=False, similarity_power=1, nn=25, **kwargs):
     """
@@ -29,6 +29,7 @@ def similarity_matrix(embeddings, arccos=False, similarity_power=1, nn=25, **kwa
     L = np.apply_along_axis(make_knn, 1, L)
     return L ** similarity_power
 
+
 def wordnet_similarity_matrix(embeddings):
     """
     Makes a similarity matrix from WordNet.
@@ -36,18 +37,19 @@ def wordnet_similarity_matrix(embeddings):
     """
     sim_mat = np.zeros((len(embeddings.iw), len(embeddings.iw)))
     words = {word:wn.morphy(word) for word in embeddings.iw}
-    lemmas = {lemma:word for word, lemma in words.iteritems()}
+    lemmas = {lemma:word for word, lemma in words.items()}
     for i, word in enumerate(words):
-        if words[word] == None:
+        if words[word] is None:
             continue
         synonyms = set(chain.from_iterable([o_word.lemma_names() 
             for o_word in wn.synsets(words[word])]))
         for o_word in synonyms:
             if o_word in lemmas:
                 sim_mat[embeddings.wi[word], embeddings.wi[lemmas[o_word]]] = 1.
-    print np.sum(sim_mat)
+    print(np.sum(sim_mat))
     np.fill_diagonal(sim_mat, 0)
     return sim_mat
+
 
 def transition_matrix(embeddings, word_net=False, first_order=False, sym=False, trans=False, **kwargs):
     """

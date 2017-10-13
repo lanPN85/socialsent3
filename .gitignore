@@ -16,6 +16,7 @@ dist
 keras
 socialsent.egg-info
 tags
+.idea/
 
 # file system nonsense
 *.DS_Store

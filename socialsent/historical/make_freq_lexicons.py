@@ -1,14 +1,14 @@
 import time
 import random
-import constants
-import seeds
-import util
-import polarity_induction_methods
+from socialsent import constants
+from socialsent import seeds
+from socialsent import util
+from socialsent import polarity_induction_methods
 
-from historical import vocab
+from socialsent.historical import vocab
 from multiprocessing import Queue, Process
-from Queue import Empty
-from representations.representation_factory import create_representation
+from multiprocessing.queues import Empty
+from socialsent.representations.representation_factory import create_representation
 
 """
 Makes historical sentiment lexicons for non-stop words with freq. > 10**-6.0
@@ -20,11 +20,11 @@ def worker(proc_num, queue):
         try:
             year = queue.get(block=False)
         except Empty:
-            print proc_num, "Finished"
+            print(proc_num, "Finished")
             return
         positive_seeds, negative_seeds = seeds.hist_seeds()
         year = str(year)
-        print proc_num, "On year", year
+        print(proc_num, "On year", year)
         words = vocab.top_words(year, 5100)
         stop_words = vocab.top_words(year, 100)
         words = words.difference(stop_words)
@@ -40,6 +40,7 @@ def worker(proc_num, queue):
                  beta=0.9, nn=25)
         util.write_pickle(polarities, constants.POLARITIES + year + '-coha-freq-boot.pkl')
 
+
 def main():
     num_procs = 6
     queue = Queue()
@@ -50,6 +51,7 @@ def main():
         p.start()
     for p in procs:
         p.join()
+
 
 if __name__ == "__main__":
     main()

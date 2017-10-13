@@ -1,23 +1,23 @@
-import util
+from . import util
 import os
 from nltk.corpus import stopwords
 from pkg_resources import resource_filename
 
-### SYSTEM AGNOSTIC CONSTANTS 
-######
+# SYSTEM AGNOSTIC CONSTANTS
+#
 DATA = os.path.abspath(resource_filename('socialsent', 'data')) + "/"
 PROCESSED_LEXICONS = DATA + 'lexicons/'
 POLARITIES = DATA + 'polarities/'
 STOPWORDS = set(stopwords.words('english'))
 LEXICON = 'inquirer'
+LEXICONS = DATA + 'unproc/'
 YEARS = map(str, range(1850, 2000, 10))
 
-######
-## THE FOLLOWING CAN BE REPLACED BY DOWNLOADING APPROPRIATE RESOURCES AND CHANGING PATHS:
+# THE FOLLOWING CAN BE REPLACED BY DOWNLOADING APPROPRIATE RESOURCES AND CHANGING PATHS:
 
-#from https://code.google.com/p/word2vec/
+# from https://code.google.com/p/word2vec/
 GOOGLE_EMBEDDINGS = '/dfs/scratch0/gigawordvecs/GoogleNews-vectors-negative300_transformed.txt'
-#from http://www.cis.lmu.de/~sascha/Ultradense/
+# from http://www.cis.lmu.de/~sascha/Ultradense/
 TWITTER_EMBEDDINGS = '/dfs/scratch0/gigawordvecs/twitter_lower_cw1_sg400_transformed.txt'
 
 # The following can be constructed from the corpora cited in the paper
@@ -30,13 +30,16 @@ COHA_SGNS_EMBEDDINGS = '/dfs/scratch0/COHA/cooccurs/word/sgns/300/'
 FREQS = "/dfs/scratch0/hist_words/coha-word/freqs.pkl"
 COHA_FREQS = "/dfs/scratch0/COHA/decade_freqs/{}-word.pkl"
 DFS_DATA = '/dfs/scratch0/googlengrams/eng-all/decades/'
-#POS = DFS_DATA + '/pos/'
+# POS = DFS_DATA + '/pos/'
 POS = "/dfs/scratch0/hist_words/coha-word/pos/"
 SUBREDDIT_EMBEDDINGS = '/dfs/scratch2/wleif/Reddit/vecs/{}/vecs'
+
 
 def make_directories():
     util.mkdir(DATA)
     util.mkdir(PROCESSED_LEXICONS)
+    util.mkdir(LEXICONS)
     util.mkdir(POLARITIES)
+
 
 make_directories()

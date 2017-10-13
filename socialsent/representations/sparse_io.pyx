@@ -31,7 +31,7 @@ def export_mat_eff(row_d, col_d, data_d, out_file):
     filename = out_file
     fn = filename
     fout = fopen(fn, 'w')
-    for i in xrange(len(row_d)):
+    for i in range(len(row_d)):
         word1 = row_d[i]
         word2  = col_d[i]
         val = data_d[i]
@@ -53,7 +53,7 @@ def retrieve_mat_as_coo(matfn, min_size=None):
     fn = matfn
     fin = fopen(fn, 'r')
     cdef int size = (os.path.getsize(matfn) / 16)
-    if min_size != None:
+    if min_size is not None:
         size += 1
     cdef np.ndarray[np.int32_t, ndim=1] row = np.empty(size, dtype=np.int32)
     cdef np.ndarray[np.int32_t, ndim=1] col = np.empty(size, dtype=np.int32)
@@ -70,7 +70,7 @@ def retrieve_mat_as_coo(matfn, min_size=None):
         data[i] = val
         i += 1
     fclose(fin)
-    if min_size != None:
+    if min_size is not None:
         row[-1] = min_size
         col[-1] = min_size
         data[-1] = 0

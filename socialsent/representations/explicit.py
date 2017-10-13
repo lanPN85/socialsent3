@@ -19,7 +19,7 @@ class Explicit:
         self.wi = {w:i for i,w in enumerate(self.iw)}
         self.ci = {c:i for i,c in enumerate(self.ic)}
         self.normal = normalize
-        if restricted_context != None:
+        if restricted_context is not None:
             self.restrict_context(restricted_context)
         if normalize:
             self.normalize()
@@ -35,7 +35,6 @@ class Explicit:
 
     def __contains__(self, key):
         return not self.oov(key)
-
 
     @classmethod
     def load(cls, path, normalize=True, restricted_context=None, **kwargs):
@@ -86,7 +85,7 @@ class Explicit:
         return self.m[self.wi[w], self.ci[c]]
     
     def oov(self, w):
-        return (not w in self.wi)
+        return w not in self.wi
 
     def similarity(self, w1, w2):
         """
@@ -118,6 +117,7 @@ class Explicit:
         scores = self.m[self.wi[w], :]
         return heapq.nlargest(n, zip(scores.data, [self.iw[i] for i in scores.indices]))
 
+
 class PositiveExplicit(Explicit):
     """
     Positive PMI (PPMI) with negative sampling (neg).
@@ -133,7 +133,9 @@ class PositiveExplicit(Explicit):
 
     @classmethod
     def load(cls, path, normalize=True, restricted_context=None, thresh=None, neg=1):
-        mat = load_matrix(path, thresh)
+        # Not sure why this calls with extra parameters
+        # mat = load_matrix(path, thresh)
+        mat = load_matrix(path)
         word_vocab, context_vocab = load_vocabulary(mat, path)
         return cls(mat, word_vocab, context_vocab, normalize, restricted_context, neg=neg)
 

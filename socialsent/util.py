@@ -1,6 +1,6 @@
 import json
 import subprocess
-import cPickle
+import pickle
 import os
 import shutil
 import sys
@@ -15,19 +15,15 @@ YELLOW = '\033[93m'
 RED = '\033[91m'
 ENDC = '\033[0m'
 
-def mkdir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory) 
-
 
 def load_pickle(fname):
     with open(fname) as f:
-        return cPickle.load(f)
+        return pickle.load(f)
 
 
 def write_pickle(o, fname):
     with open(fname, 'w') as f:
-        cPickle.dump(o, f, -1)
+        pickle.dump(o, f, -1)
 
 
 def load_json(fname):
@@ -71,7 +67,7 @@ def rmkdir(path):
 def logged_loop(iterable, n=None):
     if n is None:
         n = len(iterable)
-    step = max(1, n / 1000)
+    step = max(1.0, n / 1000)
     prog = Progbar(n)
     for i, elem in enumerate(iterable):
         if i % step == 0 or i == n - 1:
@@ -106,7 +102,12 @@ class Progbar(object):
         self.seen_so_far = 0
         self.verbose = verbose
 
-    def update(self, current, avg_values=[], exact_values=[]):
+    def update(self, current, avg_values=None, exact_values=None):
+        if exact_values is None:
+            exact_values = []
+        if avg_values is None:
+            avg_values = []
+
         for k, v in avg_values:
             if k not in self.sum_values:
                 self.sum_values[k] = [v * (current - self.seen_so_far), current - self.seen_so_far]
@@ -175,5 +176,10 @@ class Progbar(object):
                     info += ' - %s: %.4f' % (k, self.sum_values[k][0] / max(1, self.sum_values[k][1]))
                 sys.stdout.write(info + "\n")
 
-    def add(self, n, avg_values=[], exact_values=[]):
+    def add(self, n, avg_values=None, exact_values=None):
+        if exact_values is None:
+            exact_values = []
+        if avg_values is None:
+            avg_values = []
+
         self.update(self.seen_so_far+n, avg_values, exact_values)

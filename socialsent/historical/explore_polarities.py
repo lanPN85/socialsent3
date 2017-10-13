@@ -2,7 +2,6 @@ from socialsent import constants
 from socialsent import util
 from collections import defaultdict
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
@@ -27,6 +26,7 @@ def build_timeseries(raw=False, suffix="-test", years=constants.YEARS):
             del timeseries[w]
     return timeseries
 
+
 def build_boot_timeseries(suffix="-test", years=constants.YEARS):
     mean_timeseries = defaultdict(list)
     stderr_timeseries = defaultdict(list)
@@ -41,6 +41,7 @@ def build_boot_timeseries(suffix="-test", years=constants.YEARS):
             del mean_timeseries[w]
             del stderr_timeseries[w]
     return mean_timeseries, stderr_timeseries
+
 
 def get_boot_meanseries(suffix="-test", years=constants.YEARS):
     mean_timeseries = []
@@ -77,7 +78,6 @@ def build_boot_ztimeseries(suffix="-test", years=constants.YEARS):
             stderr_timeseries[w].append(np.std([zscore(i, polarities[w]) for i, polarities in enumerate(polarities_list)]))
     for w in mean_timeseries.keys():
         if len(mean_timeseries[w]) < 5:
-#            #print w + " is not present in all decades"
             del mean_timeseries[w]
             del stderr_timeseries[w]
     return mean_timeseries, stderr_timeseries
@@ -157,19 +157,19 @@ def main():
     ws = []
     p_vs_dp = []
     ordering = util.load_pickle(constants.DATA + 'word_ordering.pkl')
-    for w, polarities in timeseries.iteritems():
+    for w, polarities in timeseries.items():
         if ordering.index(w) < 50000:
             ws.append(w)
             p_vs_dp.append((np.mean(polarities[:5]), slope(polarities)))
 
     xs, ys = zip(*p_vs_dp)
     pred = LinearRegression().fit(np.matrix(xs).T, ys).predict(np.matrix(xs).T)
-    print "R2 score", r2_score(ys, pred)
+    print("R2 score", r2_score(ys, pred))
 
     def onpick(event):
         for i in event.ind:
             w = ws[i]
-            print w, p_vs_dp[i]
+            print(w, p_vs_dp[i])
             plot_timeseries(timeseries, w)
             break
     figure = plt.figure()
@@ -178,6 +178,7 @@ def main():
     plt.ylabel('rate of polarity increase')
     figure.canvas.mpl_connect('pick_event', onpick)
     plt.show()
+
 
 if __name__ == '__main__':
     main()

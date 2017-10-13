@@ -5,6 +5,7 @@ from sklearn import preprocessing
 
 from socialsent.util import load_pickle, lines
 
+
 class Embedding:
     """
     Base class for all embeddings. SGNS can be directly instantiated with it.
@@ -69,7 +70,7 @@ class Embedding:
         if w in self.wi:
             return self.m[self.wi[w], :]
         else:
-            print "OOV: ", w
+            print("OOV: ", w)
             return np.zeros(self.dim)
 
     def similarity(self, w1, w2):
@@ -94,7 +95,8 @@ class SVDEmbedding(Embedding):
     Context embeddings can be created with "transpose".
     """
     
-    def __init__(self, path, normalize=True, eig=0.0, **kwargs):
+    def __init__(self, path, vecs, vocab, normalize=True, eig=0.0, **kwargs):
+        super().__init__(vecs, vocab, normalize, **kwargs)
         ut = np.load(path + '-u.npy')
         s = np.load(path + '-s.npy')
         vocabfile = path + '-vocab.pkl'
@@ -113,8 +115,10 @@ class SVDEmbedding(Embedding):
         if normalize:
             self.normalize()
 
+
 class GigaEmbedding(Embedding):
-    def __init__(self, path, words, dim=300, normalize=True, **kwargs):
+    def __init__(self, path, words, vecs, vocab, dim=300, normalize=True, **kwargs):
+        super().__init__(vecs, vocab, normalize, **kwargs)
         seen = []
         vs = {}
         for line in lines(path):

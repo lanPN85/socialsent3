@@ -7,7 +7,8 @@ import sys
 import random
 import numpy as np
 import scipy as sp
-import embedding_transformer
+
+from . import embedding_transformer
 
 from operator import itemgetter
 from socialsent.historical import vocab
@@ -38,7 +39,7 @@ def evaluate_methods():
     """
     Evaluates different methods on standard English.
     """
-    print "Getting evalution words.."
+    print("Getting evalution words..")
     np.random.seed(0)
     lexicon = lexicons.load_lexicon("inquirer", remove_neutral=False)
     kuperman = lexicons.load_lexicon("kuperman", remove_neutral=False)
@@ -61,21 +62,10 @@ def evaluate_methods():
     eval_words = [word for word in eval_words 
             if not word in positive_seeds 
             and not word in negative_seeds]
-    print "Evaluating with ", len(eval_words), "out of", len(lexicon)
+    print("Evaluating with ", len(eval_words), "out of", len(lexicon))
 
-#    print
-#    print "WordNet:"
-#    evaluate(qwn, lexicon, eval_words, tau_lexicon=kuperman)
-#
-#    print "Densifier:"
-#    polarities = run_method(positive_seeds, negative_seeds, 
-#            common_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
-#            method=polarity_induction_methods.bootstrap, score_method=polarity_induction_methods.densify,
-#            **DEFAULT_ARGUMENTS)
-#    evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-
-    print "SentProp:"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("SentProp:")
+    polarities = run_method(positive_seeds, negative_seeds,
             common_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
             method=polarity_induction_methods.label_propagate_probabilistic,
             #method=polarity_induction_methods.bootstrap, 
@@ -86,7 +76,7 @@ def evaluate_methods():
     util.write_pickle(polarities, "tmp/gi-cc-walk-pols.pkl")
 
 def hyperparam_eval():
-    print "Getting evaluation words and embeddings"
+    print("Getting evaluation words and embeddings")
     lexicon = lexicons.load_lexicon("bingliu", remove_neutral=False)
     eval_words = set(lexicon.keys())
 
@@ -103,39 +93,39 @@ def hyperparam_eval():
 
     eval_words = [word for word in eval_words
             if not word in positive_seeds 
-            and not word in negative_seeds] 
+            and not word in negative_seeds]
 
-    print "SentProp..."
+    print("SentProp...")
     for nn in [5, 10, 25, 50]:
         for beta in [0.8, 0.9, 0.95, 0.99]:
-          print "Common"
-          polarities = run_method(positive_seeds, negative_seeds, 
+          print("Common")
+          polarities = run_method(positive_seeds, negative_seeds,
                     common_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                     method=polarity_induction_methods.random_walk, 
                     nn=nn, beta=beta,
                     **DEFAULT_ARGUMENTS)
           evaluate(polarities, lexicon, eval_words)
-          print "Hist"
-          polarities = run_method(positive_seeds, negative_seeds, 
+          print("Hist")
+          polarities = run_method(positive_seeds, negative_seeds,
                     hist_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                     method=polarity_induction_methods.random_walk, 
                     nn=nn, beta=beta,
                     **DEFAULT_ARGUMENTS)
           evaluate(polarities, lexicon, eval_words)
 
-    print "Densify..."
+    print("Densify...")
     for lr in [0.001, 0.01, 0.1, 0.5]:
         for reg in [0.001, 0.01, 0.1, 0.5]:
-          print "LR : ", lr, "Reg: ", reg
-          print "Common"
-          polarities = run_method(positive_seeds, negative_seeds, 
+          print("LR : ", lr, "Reg: ", reg)
+          print("Common")
+          polarities = run_method(positive_seeds, negative_seeds,
                     common_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                     method=polarity_induction_methods.densify, 
                     lr=lr, regularization_strength=reg,
                     **DEFAULT_ARGUMENTS)
           evaluate(polarities, lexicon, eval_words, tern=False)
-          print "Hist"
-          polarities = run_method(positive_seeds, negative_seeds, 
+          print("Hist")
+          polarities = run_method(positive_seeds, negative_seeds,
                     hist_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                     method=polarity_induction_methods.densify, 
                     lr=lr, regularization_strength=reg,
@@ -148,7 +138,7 @@ def evaluate_overlap_methods():
     Evaluate different methods on standard English,
     but restrict to words that are present in the 1990s portion of historical data.
     """
-    print "Getting evalution words and embeddings.."
+    print("Getting evaluation words and embeddings..")
     np.random.seed(0)
     lexicon = lexicons.load_lexicon("inquirer", remove_neutral=False)
     kuperman = lexicons.load_lexicon("kuperman", remove_neutral=False)
@@ -180,9 +170,9 @@ def evaluate_overlap_methods():
     hist_counts = hist_counts.get_subembed(set(eval_words).union(positive_seeds).union(negative_seeds), 
             restrict_context=False)
 
-    print "Evaluating with ", len(eval_words), "out of", len(lexicon)
+    print("Evaluating with ", len(eval_words), "out of", len(lexicon))
 
-    print "PMI"
+    print("PMI")
     polarities = run_method(positive_seeds, negative_seeds,
             hist_counts,
             method=polarity_induction_methods.bootstrap,
@@ -190,29 +180,29 @@ def evaluate_overlap_methods():
             **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
 
-    print
+    print()
     evaluate(qwn, lexicon, eval_words, tau_lexicon=kuperman)
 
-    print "SentProp with 1990s Fic embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("SentProp with 1990s Fic embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         hist_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap,
                         score_method=polarity_induction_methods.random_walk, 
                         nn=25, beta=0.9,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
-    
-    print "Densifier with 1990s Fic embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print()
+
+    print("Densifier with 1990s Fic embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         hist_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap,
                         score_method=polarity_induction_methods.densify,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
+    print()
 
-    print "Velikovich with 1990s Fic embeddings"
+    print("Velikovich with 1990s Fic embeddings")
     hist_counts.normalize()
     polarities = run_method(positive_seeds, negative_seeds, 
                         hist_counts,
@@ -221,7 +211,7 @@ def evaluate_overlap_methods():
                         T=3,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
+    print()
 
 #    print "SentProp with CC"
 #    polarities = run_method( positive_seeds, negative_seeds, 
@@ -247,7 +237,7 @@ def evaluate_adj_methods():
     Evaluate different methods on standard English,
     but restrict to words that are present in the 1990s portion of historical data.
     """
-    print "Getting evalution words and embeddings.."
+    print("Getting evalution words and embeddings..")
     np.random.seed(0)
     lexicon = lexicons.load_lexicon("inquirer", remove_neutral=False)
     kuperman = lexicons.load_lexicon("kuperman", remove_neutral=False)
@@ -281,10 +271,10 @@ def evaluate_adj_methods():
     hist_counts = hist_counts.get_subembed(set(eval_words).union(positive_seeds).union(negative_seeds), 
             restrict_context=False)
 
-    print "Evaluating with ", len(eval_words), "out of", len(lexicon)
-    print "Embeddings with ", len(embed_words)
+    print("Evaluating with ", len(eval_words), "out of", len(lexicon))
+    print("Embeddings with ", len(embed_words))
 
-    print "PMI"
+    print("PMI")
     polarities = run_method(positive_seeds, negative_seeds,
             hist_counts,
             method=polarity_induction_methods.bootstrap,
@@ -293,38 +283,38 @@ def evaluate_adj_methods():
             **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
 
-    print
+    print()
     evaluate(qwn, lexicon, eval_words, tau_lexicon=kuperman)
 
-    print "Dist with 1990s Fic embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("Dist with 1990s Fic embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         hist_embed.get_subembed(set(embed_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.dist, 
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
+    print()
 
-    print "Densifier with 1990s Fic embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("Densifier with 1990s Fic embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         hist_embed.get_subembed(set(embed_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap, 
                         score_method=polarity_induction_methods.densify, 
                         boot_size=6,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
+    print()
 
-    print "SentProp with 1990s Fic embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("SentProp with 1990s Fic embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         hist_embed.get_subembed(set(embed_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap, 
                         nn=25, beta=0.9,
                         boot_size=6,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
+    print()
 
-    print "Velikovich with 1990s Fic embeddings"
+    print("Velikovich with 1990s Fic embeddings")
     hist_counts.normalize()
     polarities = run_method(positive_seeds, negative_seeds, 
                         hist_counts,
@@ -334,10 +324,10 @@ def evaluate_adj_methods():
                         boot_size=6,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
-    print
+    print()
 
-    print "SentProp with CC"
-    polarities = run_method( positive_seeds, negative_seeds, 
+    print("SentProp with CC")
+    polarities = run_method( positive_seeds, negative_seeds,
                         common_embed.get_subembed(set(embed_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap, 
                         score_method=polarity_induction_methods.random_walk,
@@ -346,8 +336,8 @@ def evaluate_adj_methods():
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=kuperman)
 
-    print "Densifier with CC"
-    polarities = run_method( positive_seeds, negative_seeds, 
+    print("Densifier with CC")
+    polarities = run_method( positive_seeds, negative_seeds,
                         common_embed.get_subembed(set(embed_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap, 
                         score_method=polarity_induction_methods.densify,
@@ -358,7 +348,7 @@ def evaluate_adj_methods():
 
 def evaluate_finance_methods():
     np.random.seed(0)
-    print "Getting evalution words and embeddings.."
+    print("Getting evalution words and embeddings..")
     gi = lexicons.load_lexicon("inquirer", remove_neutral=False)
     lexicon = lexicons.load_lexicon("finance", remove_neutral=True)
 
@@ -381,9 +371,9 @@ def evaluate_finance_methods():
 
     stock_counts = stock_counts.get_subembed(set(eval_words).union(positive_seeds).union(negative_seeds), restrict_context=False)
 
-    print "Evaluating with ", len(eval_words), "out of", len(lexicon)
+    print("Evaluating with ", len(eval_words), "out of", len(lexicon))
 
-    print "Velikovich with 1990s Fic embeddings"
+    print("Velikovich with 1990s Fic embeddings")
     stock_counts.normalize()
     polarities = run_method(positive_seeds, negative_seeds, 
                         stock_counts,
@@ -393,28 +383,27 @@ def evaluate_finance_methods():
                         boot_size=6,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words, tau_lexicon=None)
-    print
+    print()
 
-
-    print "PMI"
+    print("PMI")
     polarities = run_method(positive_seeds, negative_seeds,
             stock_counts,
             method=polarity_induction_methods.bootstrap, 
             score_method=polarity_induction_methods.pmi,
             **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words)
-    print
+    print()
 
-    print "SentProp with stock embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("SentProp with stock embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         stock_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap, 
                         beta=0.9, nn=25,
                         **DEFAULT_ARGUMENTS)
     evaluate(polarities, lexicon, eval_words)
 
-    print "Densifier with stock embeddings"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("Densifier with stock embeddings")
+    polarities = run_method(positive_seeds, negative_seeds,
                         stock_embed.get_subembed(set(eval_words).union(negative_seeds).union(positive_seeds)),
                         method=polarity_induction_methods.bootstrap, 
                         score_method=polarity_induction_methods.densify, 
@@ -425,7 +414,7 @@ def evaluate_finance_methods():
 def evaluate_twitter_methods():
     np.random.seed(0)
 
-    print "Getting evalution words and embeddings.."
+    print("Getting evaluation words and embeddings..")
     gi = lexicons.load_lexicon("inquirer", remove_neutral=False)
     lexicon = lexicons.load_lexicon("twitter", remove_neutral=True)
     scores = lexicons.load_lexicon("twitter-scores", remove_neutral=True)
@@ -439,22 +428,22 @@ def evaluate_twitter_methods():
 
     positive_seeds, negative_seeds = seeds.twitter_seeds()
     embed = create_representation("GIGA", constants.TWITTER_EMBEDDINGS, set(lexicon.keys()).union(positive_seeds).union(negative_seeds))
-    print len((set(positive_seeds).union(negative_seeds)).intersection(embed.iw))
+    print(len((set(positive_seeds).union(negative_seeds)).intersection(embed.iw)))
     embed_words = set(embed.iw)
     s140_words = set(sent140.keys())
     eval_words = [word for word in lexicon if word in s140_words and
             not word in positive_seeds 
             and not word in negative_seeds
-            and word in embed_words] 
+            and word in embed_words]
 
-    print "Evaluating with ", len(eval_words), "out of", len(lexicon)
+    print("Evaluating with ", len(eval_words), "out of", len(lexicon))
 
-    print "Sentiment 140"
+    print("Sentiment 140")
     evaluate(sent140, lexicon, eval_words, tau_lexicon=scores)
-    print
+    print()
 
-    print "SentProp"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("SentProp")
+    polarities = run_method(positive_seeds, negative_seeds,
                         embed,
                         method=polarity_induction_methods.bootstrap, 
                         score_method=polarity_induction_methods.densify,
@@ -463,8 +452,8 @@ def evaluate_twitter_methods():
     util.write_pickle(polarities, "twitter-test.pkl")
     evaluate(polarities, lexicon, eval_words, tau_lexicon=scores)
 
-    print "SentProp"
-    polarities = run_method(positive_seeds, negative_seeds, 
+    print("SentProp")
+    polarities = run_method(positive_seeds, negative_seeds,
                         embed,
                         method=polarity_induction_methods.bootstrap, 
                         score_method=polarity_induction_methods.random_walk,
@@ -476,7 +465,7 @@ def evaluate_twitter_methods():
 def run_method(positive_seeds, negative_seeds, embeddings, transform_embeddings=False, post_densify=False,
         method=polarity_induction_methods.densify, **kwargs):
     if transform_embeddings:
-        print "Transforming embeddings..."
+        print("Transforming embeddings...")
         embeddings = embedding_transformer.apply_embedding_transformation(embeddings, positive_seeds, negative_seeds, n_dim=50)
     if post_densify:
         polarities = method(embeddings, positive_seeds, negative_seeds, **kwargs)
@@ -502,31 +491,31 @@ def evaluate(polarities, lexicon, eval_words, tau_lexicon=None, tern=True):
     if auc < 0.5:
         polarities = {word:-1*polarities[word] for word in polarities}
         acc, auc, avg_prec = binary_metrics(polarities, lexicon, eval_words)
-    print "Binary metrics:"
-    print "=============="
-    print "Accuracy with optimal threshold: {:.4f}".format(acc)
-    print "ROC AUC Score: {:.4f}".format(auc)
-    print "Average Precision Score: {:.4f}".format(avg_prec)
-    
+    print("Binary metrics:")
+    print("==============")
+    print("Accuracy with optimal threshold: {:.4f}".format(acc))
+    print("ROC AUC Score: {:.4f}".format(auc))
+    print("Average Precision Score: {:.4f}".format(avg_prec))
+
     if not tern:
         return 
     tau, cmn_f1, maj_f1, conf_mat = ternary_metrics(polarities, lexicon, eval_words, tau_lexicon=tau_lexicon)
-    print "Ternary metrics:"
-    print "=============="
-    print "Majority macro F1 baseline {:.4f}".format(maj_f1)
-    print "Macro F1 with cmn threshold: {:.4f}".format(cmn_f1)
+    print("Ternary metrics:")
+    print("==============")
+    print("Majority macro F1 baseline {:.4f}".format(maj_f1))
+    print("Macro F1 with cmn threshold: {:.4f}".format(cmn_f1))
     if tau:
-        print "Kendall Tau {:.4f}".format(tau)
-    print "Confusion matrix: "
-    print conf_mat
-    print "Neg :", float(conf_mat[0,0]) / np.sum(conf_mat[0,:])
-    print "Neut :", float(conf_mat[1,1]) / np.sum(conf_mat[1,:])
-    print "Pos :", float(conf_mat[2,2]) / np.sum(conf_mat[2,:])
-    print
+        print("Kendall Tau {:.4f}".format(tau))
+    print("Confusion matrix: ")
+    print(conf_mat)
+    print("Neg :", float(conf_mat[0, 0]) / np.sum(conf_mat[0, :]))
+    print("Neut :", float(conf_mat[1, 1]) / np.sum(conf_mat[1, :]))
+    print("Pos :", float(conf_mat[2, 2]) / np.sum(conf_mat[2, :]))
+    print()
     if tau:
-        print "Latex table line: {:2.1f} & {:2.1f} & {:.2f}\\\\".format(100*auc, 100*cmn_f1, tau)
+        print("Latex table line: {:2.1f} & {:2.1f} & {:.2f}\\\\".format(100 * auc, 100 * cmn_f1, tau))
     else:
-        print "Latex table line: {:2.1f} & {:2.1f}\\\\".format(100*auc, 100*cmn_f1)
+        print("Latex table line: {:2.1f} & {:2.1f}\\\\".format(100 * auc, 100 * cmn_f1))
 
 
 def binary_metrics(polarities, lexicon, eval_words, print_predictions=False, top_perc=None):
@@ -550,30 +539,37 @@ def binary_metrics(polarities, lexicon, eval_words, print_predictions=False, top
     return best_accuracy, roc_auc_score(y_true, y_prob), average_precision_score(y_true, y_prob)
 
 def ternary_metrics(polarities, lexicon, eval_words, tau_lexicon=None):
-    if not tau_lexicon == None:
+    kendall_words = []
+    if tau_lexicon is not None:
         kendall_words = list(set(eval_words).intersection(tau_lexicon))
     y_prob, y_true = [], []
+
     polarities = {word:polarities[word] for word in eval_words}
     for w in polarities:
         y_prob.append(polarities[w])
         y_true.append(lexicon[w])
+
     y_prob = np.array(y_prob)
     y_true = np.array(y_true)
     y_prob = 2*(y_prob - np.min(y_prob)) / (np.max(y_prob) - np.min(y_prob)) - 1
     neg_prop = np.sum(np.array(lexicon.values()) == -1) / float(len(lexicon))
     pos_prop = np.sum(np.array(lexicon.values()) == 1) / float(len(lexicon))
     sorted_probs = sorted(y_prob)
+
     neg_thresh = sorted_probs[int(np.round(neg_prop*len(sorted_probs)))]
     pos_thresh = sorted_probs[-int(np.round(pos_prop*len(sorted_probs)))]
     cmn_labels = [1 if val >= pos_thresh else -1 if val <= neg_thresh else 0 for val in y_prob]
-    if not tau_lexicon == None:
+
+    if tau_lexicon is not None:
         tau = kendalltau(*zip(*[(polarities[word], tau_lexicon[word]) for word in kendall_words]))[0]
     else:
         tau = None
+
     maj_f1 = f1_score(y_true, np.repeat(sp.stats.mode(y_true)[0][0], len(y_true)), average="macro")
     cmn_f1 = f1_score(y_true, cmn_labels, average="macro")
     label_func = lambda entry : 1 if entry > pos_thresh else -1 if entry < neg_thresh else 0
     conf_mat = confusion_matrix(y_true, [label_func(entry) for entry in y_prob])
+
     return tau, cmn_f1, maj_f1, conf_mat
 
 def optimal_tern_acc(polarities, lexicon, eval_words, threshes=np.arange(0.95, 0.0, -0.01)):
@@ -600,21 +596,21 @@ def optimal_tern_acc(polarities, lexicon, eval_words, threshes=np.arange(0.95, 0
                 else:
                     labels.append(0)
             f1s[i*len(threshes)+k] = f1_score(y_true, labels, average="macro")
-    print "(Oracle) majority baseline {:.4f}".format(
-            f1_score(y_true, np.repeat(sp.stats.mode(y_true)[0][0], len(y_true)), average="macro"))
-    print "Accuracy with optimal threshold: {:.4f}".format(np.max(f1s))
+    print("(Oracle) majority baseline {:.4f}".format(
+        f1_score(y_true, np.repeat(sp.stats.mode(y_true)[0][0], len(y_true)), average="macro")))
+    print("Accuracy with optimal threshold: {:.4f}".format(np.max(f1s)))
     best_iter = int(np.argmax(f1s))
     pos_thresh = threshes[best_iter / len(threshes)]
     neg_thresh = -1*threshes[best_iter % len(threshes)]
-    print "Optimal positive threshold: {:.4f}".format(pos_thresh)
-    print "Optimal negative threshold: {:.4f}".format(neg_thresh)
-    print "Confusion matrix: "
+    print("Optimal positive threshold: {:.4f}".format(pos_thresh))
+    print("Optimal negative threshold: {:.4f}".format(neg_thresh))
+    print("Confusion matrix: ")
     label_func = lambda entry : 1 if entry > pos_thresh else -1 if entry < neg_thresh else 0
     conf_mat = confusion_matrix(y_true, [label_func(entry) for entry in y_prob])
-    print conf_mat
-    print "Neg :", float(conf_mat[0,0]) / np.sum(conf_mat[0,:])
-    print "Neut :", float(conf_mat[1,1]) / np.sum(conf_mat[1,:])
-    print "Pos :", float(conf_mat[2,2]) / np.sum(conf_mat[2,:])
+    print(conf_mat)
+    print("Neg :", float(conf_mat[0, 0]) / np.sum(conf_mat[0, :]))
+    print("Neut :", float(conf_mat[1, 1]) / np.sum(conf_mat[1, :]))
+    print("Pos :", float(conf_mat[2, 2]) / np.sum(conf_mat[2, :]))
 
 
 if __name__ == '__main__':

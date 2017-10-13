@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from socialsent.representations.representation_factory import create_representation
 from scipy.sparse import coo_matrix
 
+
 def make_ppmi_mat(old_mat, row_probs, col_probs, smooth, neg=1, normalize=False):
     prob_norm = old_mat.sum() + (old_mat.shape[0] * old_mat.shape[1]) * smooth
     old_mat = old_mat.tocoo()
@@ -12,7 +13,7 @@ def make_ppmi_mat(old_mat, row_probs, col_probs, smooth, neg=1, normalize=False)
     col_d = old_mat.col
     data_d = old_mat.data
     neg = np.log(neg)
-    for i in xrange(len(old_mat.data)):
+    for i in range(len(old_mat.data)):
         if data_d[i] == 0.0:
             continue
         joint_prob = (data_d[i] + smooth) / prob_norm
@@ -20,11 +21,12 @@ def make_ppmi_mat(old_mat, row_probs, col_probs, smooth, neg=1, normalize=False)
         if denom == 0.0:
             data_d[i] = 0
             continue
-        data_d[i] = np.log(joint_prob /  denom)
+        data_d[i] = np.log(joint_prob / denom)
         data_d[i] = max(data_d[i] - neg, 0)
         if normalize:
             data_d[i] /= -1*np.log(joint_prob)
     return coo_matrix((data_d, (row_d, col_d)))
+
 
 def run(count_path, out_path, smooth=0, cds=True, normalize=False, neg=1):
     counts = create_representation("Explicit", count_path, normalize=False)
@@ -44,9 +46,10 @@ def run(count_path, out_path, smooth=0, cds=True, normalize=False, neg=1):
     ppmi_mat = make_ppmi_mat(old_mat, row_probs, col_probs, smooth, neg=neg, normalize=normalize)
     import pyximport
     pyximport.install(setup_args={"include_dirs": np.get_include()})
-    from representations import sparse_io
+    from socialsent.representations import sparse_io
     sparse_io.export_mat_eff(ppmi_mat.row, ppmi_mat.col, ppmi_mat.data, out_path + ".bin")
     util.write_pickle(index, out_path + "-index.pkl")
+
 
 if __name__ == "__main__":
     parser = ArgumentParser("Generates PPMI matrix from count matrix")

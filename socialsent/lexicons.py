@@ -1,9 +1,8 @@
-import constants
+from . import constants
 from socialsent import util
 import collections
 import numpy as np
 import itertools
-
 
 """
 Helper methods for creating and managing existing lexicons.
@@ -20,6 +19,7 @@ def make_kuperman_scores_lexicon():
             polarities[info[1]] = float(info[2])
     util.write_json(polarities, constants.PROCESSED_LEXICONS + 'kuperman.json')
 
+
 def make_twitter_scores_lexicon():
     polarities = {}
     for line in util.lines(constants.LEXICONS + "twitter/MaxDiff-Twitter-Lexicon/Maxdiff-Twitter-Lexicon_-1to1.txt"):
@@ -29,6 +29,7 @@ def make_twitter_scores_lexicon():
         polarities[info[1]] = float(info[0])
     util.write_json(polarities, constants.PROCESSED_LEXICONS + 'twitter-scores.json')
 
+
 def make_140_scores_lexicon():
     polarities = {}
     for line in util.lines(constants.LEXICONS + "Sentiment140-Lexicon-v0.1/unigrams-pmilexicon.txt"):
@@ -36,13 +37,14 @@ def make_140_scores_lexicon():
         polarities[info[0]] = float(info[1])
     util.write_json(polarities, constants.PROCESSED_LEXICONS + '140-scores.json')
 
+
 def make_qwn_scores_lexicon():
     polarities = collections.defaultdict(float)
     for line in util.lines(constants.LEXICONS + "qwn/turneyLittman_propSyn_08_mcr30-noAntGloss.dict"):
         info = line.split("\t")
         mod = float(info[3])
         for word in info[2].split(", "):
-            if not "_" in word:
+            if "_" not in word:
                 polarities[word.split("#")[0]] += mod
     util.write_json(polarities, constants.PROCESSED_LEXICONS + 'qwn-scores.json')
 
@@ -59,6 +61,7 @@ def make_twitter_lexicon():
             polarities[info[1]] = 1
     util.write_json(polarities, constants.PROCESSED_LEXICONS + 'twitter.json')
 
+
 def make_qwn_lexicon():
     polarities = collections.defaultdict(float)
     for line in util.lines(constants.LEXICONS + "qwn/turneyLittman_propSyn_08_mcr30-noAntGloss.dict"):
@@ -68,25 +71,25 @@ def make_qwn_lexicon():
         else:
             mod = 1
         for word in info[2].split(", "):
-            if not "_" in word:
+            if "_" not in word:
                 polarities[word.split("#")[0]] += mod
-    polarities = {word:np.sign(val) for word, val in polarities.iteritems() if val != 0}
+    polarities = {word: np.sign(val) for word, val in polarities.items() if val != 0}
     util.write_json(polarities, constants.PROCESSED_LEXICONS + 'qwn.json')
 
 
 def make_bingliu_lexicon():
     polarities = {}
     for polarity in ['positive', 'negative']:
-        for line in util.lines(constants.LEXICONS + 'bl_opinion_lexicon/{:}-words.txt'
-                .format(polarity)):
+        for line in util.lines(constants.LEXICONS + 'bl_opinion_lexicon/{:}-words.txt'.format(polarity)):
             try:
                 line = line.strip().encode('ascii', 'ignore')
                 if len(line) == 0 or line[0] == ';':
                     continue
                 polarities[line] = 1 if polarity == 'positive' else -1
             except:
-                print "skipping", line
+                print("skipping", line)
     util.write_json(polarities, constants.PROCESSED_LEXICONS + 'bingliu.json')
+
 
 def make_finance_lexicon():
     fp = open(constants.LEXICONS + "finance.csv")
@@ -102,7 +105,7 @@ def make_finance_lexicon():
         else:
             polarities[word] = 0
     util.write_json(polarities, constants.PROCESSED_LEXICONS + "finance.json")
-            
+
 
 def make_concreteness_lexicon(top=75, bottom=25):
     raw_scores = {}
@@ -116,11 +119,11 @@ def make_concreteness_lexicon(top=75, bottom=25):
     pos_thresh = np.percentile(raw_scores.values(), top)
     neg_thresh = np.percentile(raw_scores.values(), bottom)
     polarities = {}
-    label_func = lambda s : 1 if s > pos_thresh else -1 if s < neg_thresh else 0
-    for word, score in raw_scores.iteritems():
+    label_func = lambda s: 1 if s > pos_thresh else -1 if s < neg_thresh else 0
+    for word, score in raw_scores.items():
         polarities[word] = label_func(score)
     util.write_json(polarities, constants.PROCESSED_LEXICONS + "concreteness.json")
-     
+
 
 def make_mpqa_lexicon():
     polarities = {}
@@ -165,6 +168,7 @@ def load_lexicon(name=constants.LEXICON, remove_neutral=True):
     lexicon = util.load_json(constants.PROCESSED_LEXICONS + name + '.json')
     return {w: p for w, p in lexicon.iteritems() if p != 0} if remove_neutral else lexicon
 
+
 def compare_lexicons(print_disagreements=False):
     lexicons = {
         "inquirer": load_lexicon("inquirer", False),
@@ -173,22 +177,22 @@ def compare_lexicons(print_disagreements=False):
     }
 
     for l in lexicons:
-        print l, len(lexicons[l]), len([w for w in lexicons[l] if lexicons[l][w] != 0])
+        print(l, len(lexicons[l]), len([w for w in lexicons[l] if lexicons[l][w] != 0]))
 
     for l1, l2 in itertools.combinations(lexicons.keys(), 2):
         ps1, ps2 = lexicons[l1], lexicons[l2]
         common_words = set(ps1.keys()) & set(ps2.keys())
-        print l1, l2, "agreement: {:.2f}".format(
-            100.0 * sum(1 if ps1[w] == ps2[w] else 0 for w in common_words) / len(common_words))
+        print(l1, l2, "agreement: {:.2f}".format(
+            100.0 * sum(1 if ps1[w] == ps2[w] else 0 for w in common_words) / len(common_words)))
         common_words = set([word for word in ps1.keys() if ps1[word] != 0]) & \
-                       set([word for word in ps2.keys() if ps2[word] != 0])  
-        print l1, l2, "agreement ignoring neutral: {:.2f}".format(
-            100.0 * sum(1 if ps1[w] * ps2[w] == 1 else 0 for w in common_words) / len(common_words))
-        
+                       set([word for word in ps2.keys() if ps2[word] != 0])
+        print(l1, l2, "agreement ignoring neutral: {:.2f}".format(
+            100.0 * sum(1 if ps1[w] * ps2[w] == 1 else 0 for w in common_words) / len(common_words)))
+
         if print_disagreements and l1 == 'opinion' and l2 == 'inquirer':
             for w in common_words:
                 if lexicons[l1][w] != lexicons[l2][w]:
-                    print w, lexicons[l1][w], lexicons[l2][w]
+                    print(w, lexicons[l1][w], lexicons[l2][w])
 
 
 def make_all_lexicons():

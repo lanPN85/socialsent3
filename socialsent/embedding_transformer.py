@@ -1,11 +1,10 @@
 from socialsent import lexicons
-from socialsent import util
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import combinations, product
 from keras import backend as K
-from keras.models import Graph
+from keras.models import Model
 from keras.layers.core import Dense, Lambda
 from keras.optimizers import Adam, Optimizer
 from keras.regularizers import Regularizer
@@ -18,6 +17,7 @@ from socialsent.representations.embedding import Embedding
 Helper methods for learning transformations of word embeddings.
 """
 
+
 class SimpleSGD(Optimizer):
     def __init__(self, lr=5, momentum=0., decay=0.,
                  nesterov=False, **kwargs):
@@ -27,6 +27,7 @@ class SimpleSGD(Optimizer):
         self.lr = K.variable(lr)
         self.momentum = K.variable(momentum)
         self.decay = K.variable(decay)
+        self.nesterov = nesterov
 
     def get_updates(self, params, constraints, loss):
         grads = self.get_gradients(loss, params)
@@ -59,15 +60,18 @@ class SimpleSGD(Optimizer):
         base_config = super(SimpleSGD, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+
 class Orthogonal(Constraint):
     def __call__(self, p):
-        print "here"
+        print("here")
         u,s,v = T.nlinalg.svd(p)
         return K.dot(u,K.transpose(v))
+
 
 class OthogonalRegularizer(Regularizer):
     def __init__(self, strength=0.):
         self.strength = strength
+        self.p = None
 
     def set_param(self, p):
         self.p = p
@@ -122,11 +126,13 @@ class DatasetMinibatchIterator:
             }
 
 
-def get_model(inputdim, outputdim, regularization_strength=0.01, lr=0.000, cosine=False, **kwargs):
+def get_model(inputdim, outputdim, regularization_strength=0.01, lr=0.001, cosine=False, **kwargs):
+    # TODO Keras-heavy code
+
     transformation = Dense(inputdim, init='identity',
                            W_constraint=Orthogonal())
 
-    model = Graph()
+    model = Model()
     model.add_input(name='embeddings1', input_shape=(inputdim,))
     model.add_input(name='embeddings2', input_shape=(inputdim,))
     model.add_shared_node(transformation, name='transformation',
@@ -155,12 +161,12 @@ def apply_embedding_transformation(embeddings, positive_seeds, negative_seeds,
                                    n_epochs=5, n_dim=10, force_orthogonal=False,
                                    plot=False, plot_points=50, plot_seeds=False,
                                    **kwargs):
-    print "Preparing to learn embedding tranformation"
+    print("Preparing to learn embedding tranformation")
     dataset = DatasetMinibatchIterator(embeddings, positive_seeds, negative_seeds, **kwargs)
     model = get_model(embeddings.m.shape[1], n_dim, **kwargs)
 
-    print "Learning embedding transformation"
-#    prog = util.Progbar(n_epochs)
+    print("Learning embedding transformation")
+    # prog = util.Progbar(n_epochs)
     for epoch in range(n_epochs):
         dataset.shuffle()
         loss = 0
@@ -170,11 +176,11 @@ def apply_embedding_transformation(embeddings, positive_seeds, negative_seeds,
             if force_orthogonal:
                 Q = orthogonalize(Q)
             model.set_weights([Q, np.zeros_like(b)])
-#        prog.update(epoch + 1, exact_values=[('loss', loss / dataset.y.size)])
+        # prog.update(epoch + 1, exact_values=[('loss', loss / dataset.y.size)])
     Q, b = model.get_weights()
     new_mat = embeddings.m.dot(Q)[:,0:n_dim]
-    #print "Orthogonality rmse", np.mean(np.sqrt(
-    #    np.square(np.dot(Q, Q.T) - np.identity(Q.shape[0]))))
+    # print "Orthogonality rmse", np.mean(np.sqrt(
+    # np.square(np.dot(Q, Q.T) - np.identity(Q.shape[0]))))
 
     if plot and n_dim == 2:
         plot_words = positive_seeds + negative_seeds if plot_seeds else \
@@ -184,7 +190,7 @@ def apply_embedding_transformation(embeddings, positive_seeds, negative_seeds,
 
         lexicon = lexicons.load_lexicon()
         plt.figure(figsize=(10, 10))
-        for w, e in to_plot.iteritems():
+        for w, e in to_plot.items():
             plt.text(e[0], e[1], w,
                      bbox=dict(facecolor='green' if lexicon[w] == 1 else 'red', alpha=0.1))
         xmin, ymin = np.min(np.vstack(to_plot.values()), axis=0)
