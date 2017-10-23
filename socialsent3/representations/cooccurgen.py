@@ -1,7 +1,7 @@
 from collections import Counter
 import os
 import numpy as np
-from socialsent import util
+from socialsent3 import util
 
 
 def run(word_gen, index, window_size, out_file):
@@ -14,7 +14,7 @@ def run(word_gen, index, window_size, out_file):
         pair_counts = _process_context(context, pair_counts, window_size)
     import pyximport
     pyximport.install(setup_args={"include_dirs": np.get_include()})
-    from socialsent.representations import sparse_io
+    from socialsent3.representations import sparse_io
     sparse_io.export_mat_from_dict(pair_counts, out_file)
 
 

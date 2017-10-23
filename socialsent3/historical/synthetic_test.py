@@ -1,16 +1,16 @@
-from socialsent import constants
-from socialsent import util
-from socialsent import polarity_induction_methods
+from socialsent3 import constants
+from socialsent3 import util
+from socialsent3 import polarity_induction_methods
 import time
-from socialsent import seeds
-from socialsent.historical import vocab
+from socialsent3 import seeds
+from socialsent3.historical import vocab
 import random
 import numpy as np
-from socialsent import evaluate_methods
+from socialsent3 import evaluate_methods
 from multiprocessing.queues import Empty
 from multiprocessing import Process, Queue
-from socialsent.representations.representation_factory import create_representation
-from socialsent.representations.embedding import Embedding
+from socialsent3.representations.representation_factory import create_representation
+from socialsent3.representations.embedding import Embedding
 from numpy import vstack
 from scipy.stats import logistic
 from scipy.sparse import csr_matrix

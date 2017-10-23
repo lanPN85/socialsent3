@@ -3,7 +3,7 @@ import heapq
 import numpy as np
 from sklearn import preprocessing
 
-from socialsent.util import load_pickle, lines
+from socialsent3.util import load_pickle, lines
 
 
 class Embedding:
@@ -15,7 +15,7 @@ class Embedding:
         self.m = vecs
         self.dim = self.m.shape[1]
         self.iw = vocab
-        self.wi = {w:i for i,w in enumerate(self.iw)}
+        self.wi = {w: i for i, w in enumerate(self.iw)}
         if normalize:
             self.normalize()
 
@@ -117,8 +117,7 @@ class SVDEmbedding(Embedding):
 
 
 class GigaEmbedding(Embedding):
-    def __init__(self, path, words, vecs, vocab, dim=300, normalize=True, **kwargs):
-        super().__init__(vecs, vocab, normalize, **kwargs)
+    def __init__(self, path, words, normalize=True, **kwargs):
         seen = []
         vs = {}
         for line in lines(path):
@@ -126,11 +125,10 @@ class GigaEmbedding(Embedding):
             w = split[0]
             if w in words:
                 seen.append(w)
-                vs[w] = np.array(map(float, split[1:]), dtype='float32')
+                vs[w] = np.array(list(map(float, split[1:])), dtype='float32')
         self.iw = seen
-        self.wi = {w:i for i,w in enumerate(self.iw)}
+        # self.wi = {w: i for i, w in enumerate(self.iw)}
         self.m = np.vstack(vs[w] for w in self.iw)
-        if normalize:
-            self.normalize()
+        super().__init__(self.m, self.iw, normalize, **kwargs)
 
 

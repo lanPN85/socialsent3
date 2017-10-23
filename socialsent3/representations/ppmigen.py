@@ -1,8 +1,8 @@
 import numpy as np
-from socialsent import util
+from socialsent3 import util
 from argparse import ArgumentParser
 
-from socialsent.representations.representation_factory import create_representation
+from socialsent3.representations.representation_factory import create_representation
 from scipy.sparse import coo_matrix
 
 
@@ -46,7 +46,7 @@ def run(count_path, out_path, smooth=0, cds=True, normalize=False, neg=1):
     ppmi_mat = make_ppmi_mat(old_mat, row_probs, col_probs, smooth, neg=neg, normalize=normalize)
     import pyximport
     pyximport.install(setup_args={"include_dirs": np.get_include()})
-    from socialsent.representations import sparse_io
+    from socialsent3.representations import sparse_io
     sparse_io.export_mat_eff(ppmi_mat.row, ppmi_mat.col, ppmi_mat.data, out_path + ".bin")
     util.write_pickle(index, out_path + "-index.pkl")
 

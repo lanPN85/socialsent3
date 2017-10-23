@@ -1,14 +1,14 @@
 import time
 import random
-from socialsent import constants
-from socialsent import seeds
-from socialsent import util
-from socialsent import polarity_induction_methods
+from socialsent3 import constants
+from socialsent3 import seeds
+from socialsent3 import util
+from socialsent3 import polarity_induction_methods
 
-from socialsent.historical import vocab
+from socialsent3.historical import vocab
 from multiprocessing import Queue, Process
 from multiprocessing.queues import Empty
-from socialsent.representations.representation_factory import create_representation
+from socialsent3.representations.representation_factory import create_representation
 
 """
 Makes historical sentiment lexicons for all adjectives.

@@ -1,7 +1,7 @@
-from socialsent import util
+from socialsent3 import util
 
 from argparse import ArgumentParser
-from socialsent.representations import ppmigen, cooccurgen, makelowdim
+from socialsent3.representations import ppmigen, cooccurgen, makelowdim
 
 COMMENTS = "/dfs/scratch0/wleif/Reddit/clean_comments/{}.tsv"
 DICTS = "/dfs/scratch0/wleif/Reddit/dicts/{}-dict.pkl"

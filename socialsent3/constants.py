@@ -5,7 +5,7 @@ from pkg_resources import resource_filename
 
 # SYSTEM AGNOSTIC CONSTANTS
 #
-DATA = os.path.abspath(resource_filename('socialsent', 'data')) + "/"
+DATA = os.path.abspath(resource_filename('socialsent3', 'data')) + "/"
 PROCESSED_LEXICONS = DATA + 'lexicons/'
 POLARITIES = DATA + 'polarities/'
 STOPWORDS = set(stopwords.words('english'))

@@ -1,7 +1,7 @@
 import collections
 import random
 
-from socialsent.representations.embedding import Embedding, SVDEmbedding
+from socialsent3.representations.embedding import Embedding, SVDEmbedding
 
 
 class SequentialEmbedding:

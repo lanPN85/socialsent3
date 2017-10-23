@@ -9,14 +9,15 @@ statsmodels
 .git_old
 scikit-learn
 *.c
-socialsent/data/polarities
-socialsent/data/lexicon_info
-socialsent/data/example_embeddings
+socialsent3/data/polarities
+socialsent3/data/lexicon_info
+socialsent3/data/example_embeddings
 dist
 keras
 socialsent.egg-info
 tags
-.idea/
+/.idea/
+/data/
 
 # file system nonsense
 *.DS_Store

@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 from sklearn import preprocessing
 import numpy as np
 
-from socialsent.representations.matrix_serializer import load_vocabulary, load_matrix
+from socialsent3.representations.matrix_serializer import load_vocabulary, load_matrix
 
 
 class Explicit:

@@ -1,5 +1,5 @@
 from . import constants
-from socialsent import util
+from socialsent3 import util
 import collections
 import numpy as np
 import itertools
@@ -166,7 +166,7 @@ def make_inquirer_lexicon():
 
 def load_lexicon(name=constants.LEXICON, remove_neutral=True):
     lexicon = util.load_json(constants.PROCESSED_LEXICONS + name + '.json')
-    return {w: p for w, p in lexicon.iteritems() if p != 0} if remove_neutral else lexicon
+    return {w: p for w, p in lexicon.items() if p != 0} if remove_neutral else lexicon
 
 
 def compare_lexicons(print_disagreements=False):

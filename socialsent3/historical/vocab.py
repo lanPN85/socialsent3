@@ -1,5 +1,5 @@
-from socialsent import constants
-from socialsent import util
+from socialsent3 import constants
+from socialsent3 import util
 
 
 def pos_tags(year):

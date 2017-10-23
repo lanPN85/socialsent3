@@ -1,16 +1,17 @@
-from socialsent import lexicons
+from socialsent3 import lexicons
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import combinations, product
-from keras import backend as K
-from keras.models import Model
+from keras import backend as K, Input
+from keras.layers.merge import Multiply, Add
+from keras.models import Model, Sequential
 from keras.layers.core import Dense, Lambda
-from keras.optimizers import Adam, Optimizer
+from keras.optimizers import SGD, Optimizer
 from keras.regularizers import Regularizer
 from keras.constraints import Constraint
 import theano.tensor as T
-from socialsent.representations.embedding import Embedding
+from socialsent3.representations.embedding import Embedding
 
 
 """
@@ -19,7 +20,7 @@ Helper methods for learning transformations of word embeddings.
 
 
 class SimpleSGD(Optimizer):
-    def __init__(self, lr=5, momentum=0., decay=0.,
+    def __init__(self, lr=5.0, momentum=0., decay=0.,
                  nesterov=False, **kwargs):
         super(SimpleSGD, self).__init__(**kwargs)
         self.__dict__.update(locals())
@@ -119,41 +120,40 @@ class DatasetMinibatchIterator:
     def __iter__(self):
         for i in range(self.n_batches):
             batch = np.arange(i * self.batch_size, min(self.y.size, (i + 1) * self.batch_size))
-            yield {
-                'embeddings1': self.e1[batch],
-                'embeddings2': self.e2[batch],
-                'y': self.y[batch][:, np.newaxis]
-            }
+            yield (self.e1[batch], self.e2[batch]), self.y[batch][:, np.newaxis]
+
+
+def mean_mul_loss(y_true, y_pred):
+    return K.mean(y_true * y_pred)
 
 
 def get_model(inputdim, outputdim, regularization_strength=0.01, lr=0.001, cosine=False, **kwargs):
-    # TODO Keras-heavy code
+    inp1 = Input(name='embeddings1', shape=(inputdim,))
+    inp2 = Input(name='embeddings2', shape=(inputdim,))
 
     transformation = Dense(inputdim, init='identity',
                            W_constraint=Orthogonal())
 
-    model = Model()
-    model.add_input(name='embeddings1', input_shape=(inputdim,))
-    model.add_input(name='embeddings2', input_shape=(inputdim,))
-    model.add_shared_node(transformation, name='transformation',
-                          inputs=['embeddings1', 'embeddings2'],
-                          outputs=['transformed1', 'transformed2'])
-    model.add_node(Lambda(lambda x: x[:, :outputdim]), input='transformed1', name='projected1')
-    model.add_node(Lambda(lambda x: -x[:, :outputdim]), input='transformed2', name='negprojected2')
+    transform1 = transformation(inp1)
+    transform2 = transformation(inp2)
+
+    projected1 = Lambda(lambda x: x[:, :outputdim], name='projected1')(transform1)
+    projected2 = Lambda(lambda x: -x[:, :outputdim], name='negprojected2')(transform2)
 
     if cosine:
-        model.add_node(Lambda(lambda x:  x / K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1))),
-                       name='normalized1', input='projected1')
-        model.add_node(Lambda(lambda x:  x / K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1))),
-                       name='negnormalized2', input='negprojected2')
-        model.add_node(Lambda(lambda x: K.reshape(K.sum(x, axis=1), (x.shape[0], 1))),
-                       name='distances', inputs=['normalized1', 'negnormalized2'], merge_mode='mul')
+        normalized1 = Lambda(lambda x:  x / K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1)),
+                             name='normalized1')(projected1)
+        normalized2 = Lambda(lambda x:  x / K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1)),
+                             name='normalized2')(projected2)
+        merged_norm = Multiply()([normalized1, normalized2])
+        distances = Lambda(lambda x: K.reshape(K.sum(x, axis=1), (x.shape[0], 1)), name='distances')(merged_norm)
     else:
-        model.add_node(Lambda(lambda x: K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1))),
-                       name='distances', inputs=['projected1', 'negprojected2'], merge_mode='sum')
+        merged_norm = Add()([projected1, projected2])
+        distances = Lambda(lambda x: K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1)),
+                           name='distances')(merged_norm)
 
-    model.add_output(name='y', input='distances')
-    model.compile(loss={'y': lambda y, d: K.mean(y * d)}, optimizer=SimpleSGD())
+    model = Model(inputs=[inp1, inp2], outputs=[distances])
+    model.compile(loss=mean_mul_loss, optimizer=SGD(lr=lr))
     return model
 
 

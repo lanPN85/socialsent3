@@ -1,14 +1,14 @@
 import sys
 import os
-from socialsent import seeds
-from socialsent import constants
-from socialsent import util
-from socialsent.reddit import subredditgen
+from socialsent3 import seeds
+from socialsent3 import constants
+from socialsent3 import util
+from socialsent3.reddit import subredditgen
 from multiprocessing import Queue, Process
 from multiprocessing.queues import Empty
-from socialsent import polarity_induction_methods
+from socialsent3 import polarity_induction_methods
 
-from socialsent.representations.representation_factory import create_representation
+from socialsent3.representations.representation_factory import create_representation
 
 DICTS = "/dfs/scratch0/wleif/Reddit/dicts/{}-dict.pkl"
 NAMES = "/dfs/scratch0/wleif/Reddit/comment_counts.txt"

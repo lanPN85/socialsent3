@@ -1,8 +1,8 @@
 import numpy as np
 
 from sklearn.utils.extmath import randomized_svd
-from socialsent import util
-from socialsent.representations.explicit import Explicit
+from socialsent3 import util
+from socialsent3.representations.explicit import Explicit
 
 
 def run(in_file, out_path, dim=300, keep_words=None): 
