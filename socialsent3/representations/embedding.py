@@ -101,7 +101,7 @@ class SVDEmbedding(Embedding):
         s = np.load(path + '-s.npy')
         vocabfile = path + '-vocab.pkl'
         self.iw = load_pickle(vocabfile)
-        self.wi = {w:i for i, w in enumerate(self.iw)}
+        self.wi = {w: i for i, w in enumerate(self.iw)}
  
         if eig == 0.0:
             self.m = ut
@@ -132,3 +132,19 @@ class GigaEmbedding(Embedding):
         super().__init__(self.m, self.iw, normalize, **kwargs)
 
 
+class FullEmbedding(Embedding):
+    def __init__(self, path, vec_len, normalize=True, limit=3000, **kwargs):
+        seen = []
+        vs = {}
+        plines = list(lines(path))
+        if limit is not None:
+            plines = plines[:limit]
+        for line in plines:
+            split = line.split()
+            w = split[0]
+            if len(split[1:]) == vec_len:
+                seen.append(w)
+                vs[w] = np.array(list(map(float, split[1:])), dtype='float32')
+        self.iw = seen
+        self.m = np.vstack(vs[w] for w in self.iw)
+        super().__init__(self.m, self.iw, normalize, **kwargs)

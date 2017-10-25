@@ -23,6 +23,9 @@ NEGATIVE_HIST = ["bad", "horrible", "poor",  "unfortunate", "unpleasant", "disgu
 POSITIVE_ADJ = ["good", "lovely", "excellent", "fortunate", "pleasant", "delightful", "perfect", "happy"] 
 NEGATIVE_ADJ = ["bad", "horrible", "poor",  "unfortunate", "unpleasant", "disgusting", "evil", "unhappy"]
 
+POSITIVE_REVIEW = ['good', 'great', 'amazing', 'excellent', 'wonderful', 'artistic', 'incredible', 'gorgeous', 'bad']
+NEGATIVE_REVIEW = ['awful', 'terrible', 'bad', 'horrible', 'worst', 'stupid']
+
 
 def twitter_seeds():
     return POSITIVE_TWEET, NEGATIVE_TWEET
@@ -42,6 +45,10 @@ def adj_seeds():
 
 def hist_seeds():
     return POSITIVE_HIST, NEGATIVE_HIST
+
+
+def review_seeds():
+    return POSITIVE_REVIEW, NEGATIVE_REVIEW
 
 
 def random_seeds(words, lexicon, num):

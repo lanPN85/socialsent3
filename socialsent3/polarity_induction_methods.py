@@ -27,10 +27,11 @@ def dist(embeds, positive_seeds, negative_seeds, **kwargs):
 def pmi(count_embeds, positive_seeds, negative_seeds, smooth=0.01, **kwargs):
     """
     Learns polarity scores using PMI with seed words.
-    Adapted from Turney, P. and M. Littman. "Measuring Praise and Criticism: Inference of semantic orientation from assocition".
+    Adapted from Turney, P. and M. Littman.
+    "Measuring Praise and Criticism: Inference of semantic orientation from association".
     ACM Trans. Inf. Sys., 2003. 21(4) 315-346.
 
-    counts is explicit embedding containing raw co-occurrence counts
+    count_embeds is explicit embedding containing raw co-occurrence counts
     """
     w_index = count_embeds.wi
     c_index = count_embeds.ci

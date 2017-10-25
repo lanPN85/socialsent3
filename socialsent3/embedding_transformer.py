@@ -11,6 +11,7 @@ from keras.optimizers import SGD, Optimizer
 from keras.regularizers import Regularizer
 from keras.constraints import Constraint
 import theano.tensor as T
+import tensorflow as tf
 from socialsent3.representations.embedding import Embedding
 
 
@@ -65,8 +66,9 @@ class SimpleSGD(Optimizer):
 class Orthogonal(Constraint):
     def __call__(self, p):
         print("here")
-        u,s,v = T.nlinalg.svd(p)
-        return K.dot(u,K.transpose(v))
+        # u, s, v = T.nlinalg.svd(p)
+        u, s, v = tf.svd(p)
+        return K.dot(u, K.transpose(v))
 
 
 class OthogonalRegularizer(Regularizer):
@@ -79,6 +81,7 @@ class OthogonalRegularizer(Regularizer):
 
     def __call__(self, loss):
         loss += K.sum(K.square(self.p.dot(self.p.T) - T.identity_like(self.p))) * self.strength
+        # loss += K.sum(K.square(self.p.dot(self.p.T) - tf.eye(self.p.))) * self.strength
         return loss
 
     def get_config(self):
@@ -97,10 +100,13 @@ class DatasetMinibatchIterator:
 
         def add_examples(word_pairs, label):
             for w1, w2 in word_pairs:
-                embeddings1.append(embeddings[w1])
-                embeddings2.append(embeddings[w2])
-                labels.append(label)
-                self.words.append((w1, w2))
+                try:
+                    embeddings1.append(embeddings[w1])
+                    embeddings2.append(embeddings[w2])
+                    labels.append(label)
+                    self.words.append((w1, w2))
+                except KeyError:
+                    continue
 
         add_examples(combinations(positive_seeds, 2), 1)
         add_examples(combinations(negative_seeds, 2), 1)
@@ -118,7 +124,7 @@ class DatasetMinibatchIterator:
             self.e1[perm], self.e2[perm], self.y[perm], [self.words[i] for i in perm]
 
     def __iter__(self):
-        for i in range(self.n_batches):
+        for i in range(int(self.n_batches)):
             batch = np.arange(i * self.batch_size, min(self.y.size, (i + 1) * self.batch_size))
             yield (self.e1[batch], self.e2[batch]), self.y[batch][:, np.newaxis]
 
@@ -131,8 +137,8 @@ def get_model(inputdim, outputdim, regularization_strength=0.01, lr=0.001, cosin
     inp1 = Input(name='embeddings1', shape=(inputdim,))
     inp2 = Input(name='embeddings2', shape=(inputdim,))
 
-    transformation = Dense(inputdim, init='identity',
-                           W_constraint=Orthogonal())
+    transformation = Dense(inputdim, kernel_initializer='identity',
+                           kernel_constraint=Orthogonal())
 
     transform1 = transformation(inp1)
     transform2 = transformation(inp2)
@@ -149,7 +155,7 @@ def get_model(inputdim, outputdim, regularization_strength=0.01, lr=0.001, cosin
         distances = Lambda(lambda x: K.reshape(K.sum(x, axis=1), (x.shape[0], 1)), name='distances')(merged_norm)
     else:
         merged_norm = Add()([projected1, projected2])
-        distances = Lambda(lambda x: K.reshape(K.sqrt(K.sum(x * x, axis=1)), (x.shape[0], 1)),
+        distances = Lambda(lambda x: K.sqrt(K.sum(x * x, axis=1)),
                            name='distances')(merged_norm)
 
     model = Model(inputs=[inp1, inp2], outputs=[distances])
@@ -170,8 +176,9 @@ def apply_embedding_transformation(embeddings, positive_seeds, negative_seeds,
     for epoch in range(n_epochs):
         dataset.shuffle()
         loss = 0
-        for i, X in enumerate(dataset):
-            loss += model.train_on_batch(X)[0] * X['y'].size
+        for i, tup in enumerate(dataset):
+            X, y = tup[0], tup[1]
+            loss += model.train_on_batch(X, y)[0] * y.size
             Q, b = model.get_weights()
             if force_orthogonal:
                 Q = orthogonalize(Q)

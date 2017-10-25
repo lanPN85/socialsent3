@@ -75,6 +75,21 @@ def logged_loop(iterable, n=None):
         yield elem
 
 
+def dict2csv(d, path):
+    with open(path, 'wt') as f:
+        for k, v in d.items():
+            f.write('%s\t%f\n' % (k, v))
+
+
+def csv2dict(path):
+    d = {}
+    with open(path, 'wt') as f:
+        for line in f:
+            cols = line.strip().split('\t')
+            d[cols[0]] = cols[1]
+    return d
+
+
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
         if abs(num) < 1024.0:
